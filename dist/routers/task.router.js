@@ -1,0 +1,18 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.tasksRouter = void 0;
+const express_1 = require("express");
+const task_controller_1 = require("../controllers/task.controller");
+const services_1 = require("../services");
+const schemas_1 = require("../schemas");
+const middlewares_1 = require("../middlewares");
+const tsyringe_1 = require("tsyringe");
+exports.tasksRouter = (0, express_1.Router)();
+tsyringe_1.container.registerSingleton("TaskServices", services_1.TaskServices);
+const taskControllers = tsyringe_1.container.resolve(task_controller_1.TaskControllers);
+exports.tasksRouter.use(middlewares_1.VerifyToken.execute);
+exports.tasksRouter.post("/", middlewares_1.AddUserIdToRequest, middlewares_1.ValidateBody.execute(schemas_1.taskCreateSchema), (req, res) => taskControllers.create(req, res));
+exports.tasksRouter.get("/", (req, res) => taskControllers.findMany(req, res));
+exports.tasksRouter.get("/:id", middlewares_1.IsTaskIdValid.execute, middlewares_1.VerifyTaskOwnership.execute, (req, res) => taskControllers.findOne(req, res));
+exports.tasksRouter.patch("/:id", middlewares_1.ValidateBody.execute(schemas_1.taskUpdateSchema), middlewares_1.IsTaskIdValid.execute, middlewares_1.VerifyTaskOwnership.execute, (req, res, next) => taskControllers.update(req, res, next));
+exports.tasksRouter.delete("/:id", middlewares_1.IsTaskIdValid.execute, middlewares_1.VerifyTaskOwnership.execute, (req, res, next) => taskControllers.delete(req, res, next));
